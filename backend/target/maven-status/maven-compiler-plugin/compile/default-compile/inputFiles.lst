@@ -1,0 +1,11 @@
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/DeskTradeBackendApplication.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/config/OpenApiConfig.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/config/SecurityConfig.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/AuthController.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/UserController.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/model/User.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/repository/UserRepository.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/security/AppUserDetails.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/security/AppUserDetailsService.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/security/JwtFilter.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/security/JwtUtil.java

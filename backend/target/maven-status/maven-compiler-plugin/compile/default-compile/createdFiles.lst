@@ -1,0 +1,15 @@
+com/desktrade/model/User.class
+com/desktrade/security/AppUserDetailsService.class
+com/desktrade/DeskTradeBackendApplication.class
+com/desktrade/controller/AuthController$AuthRequest.class
+com/desktrade/security/JwtUtil.class
+com/desktrade/controller/UserController.class
+com/desktrade/controller/AuthController$RegisterRequest.class
+com/desktrade/security/JwtFilter.class
+com/desktrade/controller/AuthController.class
+com/desktrade/model/User$UserBuilder.class
+com/desktrade/security/AppUserDetails.class
+com/desktrade/config/OpenApiConfig.class
+com/desktrade/config/SecurityConfig.class
+com/desktrade/controller/AuthController$AuthResponse.class
+com/desktrade/repository/UserRepository.class
