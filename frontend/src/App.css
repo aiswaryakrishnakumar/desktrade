@@ -1,0 +1,285 @@
+/* paste this into src/App.css or src/styles/admin.css */
+/* Admin / Employee layout (styles used by EmployeeDashboard / AdminDashboard) */
+.admin-root { display:flex; min-height:100vh; background:linear-gradient(180deg,#f6f8fa,#f2f5f8); }
+.dt-sidebar { width:260px; padding:20px; border-right:1px solid #eee; background:#fff; }
+.main-area { flex:1; padding:24px; }
+
+/* Sidebar / brand */
+.brand { display:flex; gap:12px; align-items:center; margin-bottom:18px; }
+.brand-icon { font-size:20px; }
+.brand-title { font-weight:700; }
+.nav { display:flex; flex-direction:column; gap:8px; }
+.nav-item { padding:8px 10px; border:none; background:transparent; text-align:left; cursor:pointer; }
+.nav-item.active { background:#eef6ff; border-radius:6px; }
+
+/* Topbar */
+.topbar { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.page-title { margin:0; font-size:20px; }
+
+/* Panels, cards, tables */
+.panel { background:#fff; border-radius:10px; box-shadow:0 2px 6px rgba(20,20,20,0.04); padding:16px; }
+.dt-table { width:100%; border-collapse:collapse; }
+.dt-table th, .dt-table td { padding:12px; border-bottom:1px solid #f0f0f0; }
+
+/* small utility */
+.btn { padding:8px 12px; border-radius:8px; background:#f3f4f6; border:1px solid #e5e7eb; cursor:pointer; }
+.btn-approve { background:#10b981; color:white; border:none; }
+.btn-danger { background:#ef4444; color:white; border:none; }
+.error { color:#b91c1c; }
+
+
+/* --- LOGIN: Centered card (Option A) --- */
+
+/* Page container: full viewport and center content */
+.center-screen {
+  min-height: 100vh;               /* fill viewport */
+  display: flex;
+  align-items: center;             /* vertical centering */
+  justify-content: center;         /* horizontal centering */
+  padding: 32px;
+  box-sizing: border-box;
+  background: #f7f9fb;             /* subtle page background */
+}
+
+/* The card: constrained width, subtle shadow, rounded edges */
+.login-card {
+  width: 100%;
+  max-width: 980px;                /* card width on large screens */
+  display: flex;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  box-shadow: 0 12px 36px rgba(11,15,30,0.06);
+  border: 1px solid rgba(15,23,42,0.04);
+}
+
+/* left illustration */
+.left-panel {
+  width: 44%;
+  padding: 24px;
+  background: linear-gradient(180deg,#fff,#fcfdff);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+.illustration-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* right form */
+.right-panel {
+  width: 56%;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+/* typography + inputs (same as before) */
+.page-title { font-size: 32px; margin: 0 0 4px 0; }
+.sub { margin: 0 0 12px 0; color: #4b5563; }
+.login-form { display: flex; flex-direction: column; gap: 12px; }
+.form-label { display: block; }
+.label-text { font-size: 13px; color: #374151; margin-bottom: 6px; }
+.form-input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6eef6;
+  background: #fbfdff;
+  width: 100%;
+  box-sizing: border-box;
+}
+.link-button { background: transparent; border: none; color: #2563eb; cursor: pointer; font-size: 13px; }
+.eye-button { padding: 8px; border-radius: 8px; border: 1px solid #e6eef6; background: #fff; cursor: pointer; }
+.btn-primary {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #0f1724;
+  color: white;
+  font-weight: 600;
+}
+.error { color: #b91c1c; font-size: 13px; }
+.help { color: #6b7280; font-size: 13px; }
+
+/* responsive: on small screens stack panels */
+@media (max-width: 900px) {
+  .login-card { flex-direction: column; max-width: 700px; }
+  .left-panel, .right-panel { width: 100%; padding-left: 20px; padding-right: 20px; }
+  .illustration-img { height: 160px; }
+  .center-screen { padding: 20px; }
+}
+
+/* --- Admin / Dashboard styles (append into src/App.css) --- */
+
+.admin-root { display:flex; min-height:100vh; background:linear-gradient(180deg,#f6f8fa,#f2f5f8); }
+
+/* Sidebar */
+.dt-sidebar {
+  width: 260px;
+  padding: 20px;
+  border-right: 1px solid #eef2f7;
+  background: #ffffff;
+  box-sizing: border-box;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.dt-brand { display:flex; gap:12px; align-items:center; margin-bottom:12px; cursor:pointer; }
+.dt-brand-title { font-weight:700; color:#0b1724; }
+.dt-nav { display:flex; flex-direction:column; gap:8px; margin-bottom: 10px; }
+.dt-nav-item { padding:10px 12px; text-align:left; border-radius:8px; color:#2b2b36; text-decoration:none; }
+.dt-nav-item.active, .dt-nav-item:hover { background:#eef6ff; color:#0b5fff; }
+
+/* Main area centered with max width */
+.admin-main {
+  flex: 1;
+  padding: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Topbar + controls */
+.admin-topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+.admin-title { font-size:28px; margin:0; font-weight:800; color:#0b1724; }
+.admin-sub { color:#6b7280; margin:6px 0 0; }
+.admin-controls { display:flex; gap:10px; align-items:center; }
+.search-input { padding:8px 10px; border-radius:8px; border:1px solid #e6eef6; background:#fff; }
+.btn { padding:8px 12px; border-radius:8px; border:1px solid #e6e7eb; background:#fff; cursor:pointer; text-decoration:none; color:inherit; display:inline-block; }
+.btn-ghost { background:#fff; border:1px solid #e7edf6; }
+.btn-primary { background:#2563eb; color:white; border:none; padding:9px 14px; border-radius:8px; }
+
+/* Small stats grid */
+.cards-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:16px; margin-bottom:18px; }
+.card { background:#fff; border-radius:10px; padding:14px; box-shadow:0 8px 24px rgba(11,15,30,0.04); }
+.card-title { font-size:13px; color:#6b7280; margin-bottom:8px; }
+.card-value { font-weight:700; font-size:20px; color:#0b1724; }
+.card-meta { font-size:12px; color:#6b7280; margin-top:8px; }
+
+/* panel */
+.panel { background:#fff; border-radius:10px; padding:20px; margin-bottom:18px; box-shadow:0 8px 24px rgba(11,15,30,0.04); }
+.panel-header h2 { margin:0 0 6px 0; font-size:20px; color:#0b1724; }
+.panel-header p { color:#6b7280; margin:0; }
+
+/* item cards */
+.item-card {
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(11,15,30,0.04);
+  display:flex;
+  flex-direction:column;
+}
+.item-thumb {
+  height: 140px;
+  background-size: cover;
+  background-position: center;
+  background-color: #f6f7fb;
+}
+.item-card > div { padding: 12px; }
+
+/* table */
+.dt-table { width:100%; border-collapse:collapse; }
+.dt-table th, .dt-table td { padding:14px 12px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:14px; color:#213547; }
+.dt-table thead th { font-weight:700; }
+
+/* responsive */
+@media (max-width: 1100px) {
+  .cards-grid { grid-template-columns: repeat(2,1fr); }
+  .admin-main { padding: 18px; max-width: 900px; }
+}
+@media (max-width: 800px) {
+  .dt-sidebar { display:none; }
+  .admin-root { display:block; }
+  .admin-main { max-width: 100%; padding: 12px; margin: 0; }
+  .cards-grid { grid-template-columns: 1fr; }
+}
+
+
+/* pointer-events safety: ensure main content receives clicks */
+.admin-main, .dt-sidebar, .login-card, .center-screen {
+  pointer-events: auto !important;
+}
+
+/* ensure no full-screen element sits on top unintentionally */
+#__overlay__ { display: none !important; pointer-events: none !important; }
+
+
+
+/* Admin dashboard — items grid + controls */
+
+.admin-controls .search-input {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #e6eef6;
+  background: #fff;
+}
+
+/* item grid */
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+/* item card */
+.item-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(11,15,30,0.04);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.item-card:hover { transform: translateY(-6px); box-shadow: 0 16px 36px rgba(11,15,30,0.06); }
+
+.item-thumb {
+  height: 140px;
+  background-size: cover;
+  background-position: center;
+  background-color: #f6f7fb;
+}
+
+/* body */
+.item-body { padding: 12px; display:flex; flex-direction:column; gap:6px; }
+.item-title { font-weight: 700; color: #0b1724; }
+.item-meta { font-size: 13px; color: #6b7280; }
+
+/* status pill */
+.status-pill {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef2f8;
+  color: #0b5fff;
+  font-weight: 600;
+}
+.status-pill.pending { background:#fff4e6; color:#a16207; }
+.status-pill.approved { background:#ecfdf5; color:#047857; }
+.status-pill.active { background:#ebf8ff; color:#0369a1; }
+
+/* empty state */
+.empty-state {
+  text-align: center;
+  padding: 36px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(11,15,30,0.03);
+}
+.empty-illustration { font-size: 36px; opacity: .7; }
+.empty-title { font-weight: 700; margin-top: 8px; font-size: 18px; }
+.empty-sub { color: #6b7280; margin-top: 6px; }
+
+/* responsive */
+@media (max-width: 900px) {
+  .items-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .admin-controls { flex-wrap: wrap; gap: 8px; }
+}
