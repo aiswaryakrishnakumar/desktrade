@@ -12,6 +12,7 @@
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/ChatMessageDto.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/CreateCategoryRequest.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/CreateItemRequest.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/ItemDto.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/OrderRequestItemDto.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/OrderResponseDto.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/ReviewRequest.java

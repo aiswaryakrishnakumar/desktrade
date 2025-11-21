@@ -56,16 +56,18 @@ public class ItemController {
     @Operation(summary = "Admin: approve item", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/{id}/approve")
-    public ResponseEntity<Item> approveItem(@PathVariable Long id, Principal p) {
-        Item i = itemService.approveItem(id, p.getName());
-        return ResponseEntity.ok(i);
+    public ResponseEntity<Void> approveItem(@PathVariable Long id, Principal p) {
+        itemService.approveItem(id, p.getName());
+        // return no content to avoid serializing JPA entities (prevents Hibernate proxy serialization errors)
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Admin: reject item", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/{id}/reject")
-    public ResponseEntity<Item> rejectItem(@PathVariable Long id, @RequestParam(required = false) String reason, Principal p) {
-        Item i = itemService.rejectItem(id, p.getName(), reason);
-        return ResponseEntity.ok(i);
+    public ResponseEntity<Void> rejectItem(@PathVariable Long id, @RequestParam(required = false) String reason, Principal p) {
+        itemService.rejectItem(id, p.getName(), reason);
+        // likewise return no content
+        return ResponseEntity.noContent().build();
     }
 }

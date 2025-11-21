@@ -1,37 +1,74 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../App.css';
-import { createEmployee } from '../services/api';
+// src/pages/NewEmployee.tsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "../App.css";
+import { createEmployee } from "../services/api";
+
+type CreateEmployeePayload = {
+  name: string;
+  email: string;
+  password: string;
+  role?: string;
+  roles?: string[];
+  department?: string;
+};
 
 export default function NewEmployee() {
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('EMPLOYEE');
-  const [department, setDepartment] = useState('');
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("employee");
+  const [department, setDepartment] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Normalize role helpers
+  const normalizeRoleForRoleField = (r?: string) => {
+    if (!r) return undefined;
+    return r.toString().trim().toLowerCase();
+  };
+
+  const normalizeRoleForRolesArray = (r?: string) => {
+    if (!r) return undefined;
+    return [r.toString().trim().toUpperCase()];
+  };
 
   const submit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setError(null);
-    if (!fullName.trim() || !email.trim() || !password) {
-      setError('Name, email and password are required');
+
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError("Name, Email, and Password are required");
       return;
     }
+
     setLoading(true);
-    const parts = fullName.trim().split(/\s+/);
-    const firstName = parts.shift() || '';
-    const lastName = parts.join(' ') || '';
-    const sendRole = role === 'EMPLOYEE' ? 'ROLE_EMPLOYEE' : role === 'ADMIN' ? 'ROLE_ADMIN' : role;
+
     try {
-      // send role as EMPLOYEE or ADMIN
-      await createEmployee({ firstName, lastName, email: email.trim(), password, role: sendRole, department } as any);
-      navigate('/admin/employees');
-    } catch (err) {
-      console.error(err);
-      setError('Failed to create employee');
+      const normalizedRoleLower = normalizeRoleForRoleField(role || "employee");
+      const normalizedRolesUpper = normalizeRoleForRolesArray(role || "employee");
+
+      const payload: CreateEmployeePayload = {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        role: normalizedRoleLower, // backend expects lowercase role field (e.g. 'employee')
+        roles: normalizedRolesUpper, // and roles array uppercase (e.g. ['EMPLOYEE'])
+        department: department?.trim() || undefined,
+      };
+
+      // call API
+      await createEmployee(payload as any);
+
+      // navigate back to list
+      navigate("/admin/employees");
+    } catch (err: any) {
+      console.error("Error creating employee:", err);
+      const msg = err?.body?.message || err?.message || "Failed to create employee";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -39,45 +76,81 @@ export default function NewEmployee() {
 
   return (
     <div className="admin-root">
-      <main className="main-area">
-        <header className="topbar">
-          <h1 className="page-title">Add New Employee</h1>
+      <main className="admin-main">
+        <header className="admin-topbar">
+          <h1 className="admin-title">Add Employee</h1>
+          <p className="admin-sub">Create a new employee account.</p>
         </header>
 
-        <section style={{ maxWidth: 900, marginTop: 20 }}>
-          <form className="panel" onSubmit={submit} style={{ padding: 20 }}>
+        <section className="panel" style={{ maxWidth: 700 }}>
+          <form onSubmit={submit} style={{ padding: 18 }}>
             <div style={{ marginBottom: 12 }}>
-              <label>Full Name</label>
-              <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g., Jane Doe" />
+              <label className="form-label">Full Name</label>
+              <input
+                className="form-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+              />
             </div>
 
             <div style={{ marginBottom: 12 }}>
-              <label>Work Email</label>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="name@company.com" required />
+              <label className="form-label">Email</label>
+              <input
+                className="form-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="john@example.com"
+              />
             </div>
 
             <div style={{ marginBottom: 12 }}>
-              <label>Initial Password</label>
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Enter an initial password" required />
+              <label className="form-label">Password</label>
+              <input
+                className="form-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+              />
             </div>
 
-            <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
               <div style={{ flex: 1 }}>
-                <label>Role</label>
-                <select value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="EMPLOYEE">EMPLOYEE</option>
-                  <option value="ADMIN">ADMIN</option>
+                <label className="form-label">Department</label>
+                <input
+                  className="form-input"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  placeholder="IT, Sales..."
+                />
+              </div>
+
+              <div style={{ width: 180 }}>
+                <label className="form-label">Role</label>
+                <select
+                  className="form-input"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                >
+                  <option value="employee">Employee</option>
+                  <option value="admin">Admin</option>
+                  <option value="seller">Seller</option>
                 </select>
               </div>
-              <div style={{ flex: 1 }}>
-                <label>Department</label>
-                <input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g., Engineering" />
-              </div>
             </div>
 
-            <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-              <button type="submit" className="btn btn-approve" disabled={loading}>{loading ? 'Adding…' : 'Add Employee'}</button>
-              <button type="button" className="btn" onClick={() => navigate('/admin')}>Cancel</button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-primary" disabled={loading}>
+                {loading ? "Creating…" : "Create"}
+              </button>
+              <button
+                className="btn btn-ghost"
+                type="button"
+                onClick={() => navigate("/admin/employees")}
+              >
+                Cancel
+              </button>
             </div>
 
             {error && <div className="error" style={{ marginTop: 12 }}>{error}</div>}

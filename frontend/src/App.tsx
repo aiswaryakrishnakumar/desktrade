@@ -1,46 +1,53 @@
 // src/App.tsx
+import type { ReactElement } from 'react';
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// Pages
+// Pages / Layouts
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import Employees from './pages/Employees';
-import Employee from './pages/Employee';
 import NewCategory from './pages/NewCategory';
 import NewEmployee from './pages/NewEmployee';
 import NewItem from './pages/NewItem';
-import CategoriesPage from './pages/categories';       // CASE-SENSITIVE: file is Categories.tsx
-import CategoryView from './pages/categoryview';      // CASE-SENSITIVE: file is CategoryView.tsx
+import EmployeeDashboard from './pages/EmployeeDashboard';
 
-// helper to parse JWT (same logic as your Login page)
+// NOTE: ensure these imports match the exact file names (case-sensitive on some OS)
+import CategoriesPage from './pages/categories';
+import CategoryView from './pages/categoryview';
+
+/* ------------------ auth helpers ------------------ */
+
 function parseJwt(token: string | null) {
   try {
     if (!token) return null;
     const parts = token.split('.');
     if (parts.length < 2) return null;
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return payload;
+    // base64 decode safely
+    return JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
   } catch {
     return null;
   }
 }
 
-function getToken() {
+function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('token');
 }
 
-function getRoleFromTokenOrUser() {
+function getRoleFromTokenOrUser(): string {
   const userRaw = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   if (userRaw) {
     try {
       const u = JSON.parse(userRaw);
       if (u?.role) return String(u.role).toLowerCase();
       if (u?.roles && Array.isArray(u.roles) && u.roles[0]) return String(u.roles[0]).toLowerCase();
-    } catch {}
+    } catch {
+      // fallthrough to token parsing
+    }
   }
+
   const token = getToken();
   const claims: any = parseJwt(token);
   if (claims) {
@@ -51,35 +58,46 @@ function getRoleFromTokenOrUser() {
       return (typeof first === 'string' ? first : first?.authority || '').toLowerCase();
     }
   }
-  return null;
+
+  return '';
 }
 
+/* ------------------ ProtectedRoute ------------------ */
+/* Usage: <ProtectedRoute require="admin"><AdminLayout /></ProtectedRoute>
+   - require: 'any' (authenticated), 'admin', 'employee'
+*/
 type ProtectedProps = {
-  children: React.ReactElement;
+  children: ReactElement;
   require?: 'any' | 'admin' | 'employee';
 };
 
 function ProtectedRoute({ children, require = 'any' }: ProtectedProps) {
   const token = getToken();
   if (!token) {
+    // not authenticated
     return <Navigate to="/" replace />;
   }
+
   if (require === 'any') return children;
+
   const role = getRoleFromTokenOrUser() || '';
   if (require === 'admin' && role.includes('admin')) return children;
   if (require === 'employee' && (role.includes('employee') || role.includes('user'))) return children;
+
+  // authenticated but not authorized
   return <Navigate to="/" replace />;
 }
 
+/* ------------------ App (routes) ------------------ */
+
 export default function App() {
   return (
-    <>
     <BrowserRouter>
       <Routes>
         {/* Public */}
         <Route path="/" element={<Login />} />
 
-        {/* Admin area (layout via Admin) */}
+        {/* Admin area (Admin acts as a layout for nested admin pages) */}
         <Route
           path="/admin"
           element={
@@ -88,37 +106,34 @@ export default function App() {
             </ProtectedRoute>
           }
         >
+          {/* index -> /admin */}
           <Route index element={<AdminDashboard />} />
+
+          {/* child routes are RELATIVE (no leading slash) */}
           <Route path="employees" element={<Employees />} />
           <Route path="employees/new" element={<NewEmployee />} />
+
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="categories/new" element={<NewCategory />} />
           <Route path="categories/:id" element={<CategoryView />} />
+
+          {/* admin adding item -> /admin/items/new */}
+          <Route path="items/new" element={<NewItem />} />
         </Route>
 
-        {/* Employee/Seller area */}
+        {/* Employee area (top-level route) */}
         <Route
           path="/employee"
           element={
             <ProtectedRoute require="employee">
-              <Employee />
+              <EmployeeDashboard />
             </ProtectedRoute>
           }
         />
 
-        <Route
-          path="/items/new"
-          element={
-            <ProtectedRoute require="employee">
-              <NewItem />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* fallback */}
+        {/* Fallback - unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-    </>
   );
 }

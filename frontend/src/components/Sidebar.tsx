@@ -43,8 +43,8 @@ export default function Sidebar({ active }: { active?: string }) {
       <nav className="dt-nav">
         <Link className={`dt-nav-item ${active === 'dashboard' ? 'active' : ''}`} to="/admin">Dashboard</Link>
         <Link className={`dt-nav-item ${active === 'employees' ? 'active' : ''}`} to="/admin/employees">Employees</Link>
-        <Link className={`dt-nav-item ${active === 'new-employee' ? 'active' : ''}`} to="/admin/employees/new">Add Employee</Link>
-        <Link className={`dt-nav-item ${active === 'new-category' ? 'active' : ''}`} to="/admin/categories/new">New Category</Link>
+        {/* <Link className={`dt-nav-item ${active === 'new-employee' ? 'active' : ''}`} to="/admin/employees/new">Add Employee</Link> */}
+        {/* <Link className={`dt-nav-item ${active === 'new-category' ? 'active' : ''}`} to="/admin/categories/new">New Category</Link> */}
       </nav>
 
       <div style={{ marginTop: 18, marginBottom: 8, fontSize: 13, color: '#374151' }}>
