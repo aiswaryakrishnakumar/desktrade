@@ -1,12 +1,12 @@
 // src/pages/Categories.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, type JSX } from 'react';
 import { Link } from 'react-router-dom';
-import '../App.css';
-import { getCategoriesAdmin, approveCategory, rejectCategory } from '../services/api';
+import "../styles/categories.css";
 
-type Category = { id?: any; name?: string; description?: string; status?: string; createdAt?: string };
+import { fetchAdminCategories, rejectCategory } from '../services/api';
+import type { Category } from '../services/api';
 
-export default function CategoriesPage() {
+export default function CategoriesPage(): JSX.Element {
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | number | null>(null);
@@ -16,11 +16,23 @@ export default function CategoriesPage() {
     setLoading(true);
     setError(null);
     try {
-      const res: any = await getCategoriesAdmin();
-      setCats(Array.isArray(res) ? res : []);
+      const res: any = await fetchAdminCategories();
+      const raw = Array.isArray(res) ? res : res?.content || res?.data || res;
+
+      const normalized = Array.isArray(raw)
+        ? raw.map((c: any, i: number) => ({
+            id: c?.id ?? i,
+            name: c?.name ?? `Category ${i}`,
+            description: c?.description,
+            status: c?.status,
+            createdAt: c?.createdAt,
+          }))
+        : [];
+
+      setCats(normalized);
     } catch (err: any) {
       console.error(err);
-      setError('Failed to load categories');
+      setError("Failed to load categories");
     } finally {
       setLoading(false);
     }
@@ -28,90 +40,96 @@ export default function CategoriesPage() {
 
   useEffect(() => { load(); }, []);
 
-  const onApprove = async (id: any) => {
-    setBusyId(id);
-    try {
-      await approveCategory(id);
-      // refresh
-      await load();
-    } catch (err: any) {
-      console.error(err);
-      setError(err?.message || 'Approve failed');
-    } finally { setBusyId(null); }
-  };
-
   const onReject = async (id: any) => {
-    // optional: ask for reason / confirmation - simplified here
-    if (!confirm('Reject this category?')) return;
+    if (!confirm("Reject this category?")) return;
     setBusyId(id);
     try {
       await rejectCategory(id);
       await load();
     } catch (err: any) {
-      console.error(err);
-      setError(err?.message || 'Reject failed');
-    } finally { setBusyId(null); }
+      setError(err.message || "Reject failed");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   return (
-    <div>
-      <header className="admin-topbar" style={{ marginBottom: 18 }}>
+    <div className="categories-page">
+      {/* HEADER */}
+      <header className="categories-topbar">
         <div>
-          <h1 className="admin-title">Categories</h1>
-          <p className="admin-sub">Manage categories in the marketplace.</p>
+          <h1 className="categories-title">Categories</h1>
+          <p className="categories-sub">Manage categories in the marketplace.</p>
         </div>
-        <div className="admin-controls">
-          <Link to="/admin/categories/new" className="btn btn-primary">Create New Category</Link>
-        </div>
+
+        <Link to="/admin/categories/new" className="categories-btn-primary">
+          + Create Category
+        </Link>
       </header>
 
-      <section className="panel">
-        {loading && <div style={{ padding: 18 }}>Loading categories…</div>}
-        {error && <div className="error" style={{ padding: 12 }}>{error}</div>}
+      {/* ERROR */}
+      {error && <div className="categories-error">{error}</div>}
 
-        {!loading && cats.length === 0 && <div style={{ padding: 20, color: '#6b7280' }}>No categories found.</div>}
+      {loading && <div className="categories-loading">Loading categories…</div>}
 
-        {!loading && cats.length > 0 && (
-          <div className="table-wrap">
-            <table className="dt-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {cats.map(c => (
-                  <tr key={String(c.id)}>
-                    <td style={{ fontWeight: 700 }}>{c.name}</td>
-                    <td>{c.description || '—'}</td>
-                    <td>{String(c.status || '—').toUpperCase()}</td>
-                    <td>{c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <Link to={`/admin/categories/${c.id}`} className="btn" style={{ marginRight: 8 }}>View</Link>
+      {!loading && cats.length === 0 && (
+        <div className="categories-empty">No categories found.</div>
+      )}
 
-                      {/* Show approve/reject only for PENDING */}
-                      {String((c.status || '').toLowerCase()) === 'pending' && (
-                        <>
-                          <button className="btn btn-primary" disabled={busyId === c.id} onClick={() => onApprove(c.id)}>
-                            {busyId === c.id ? '...' : 'Approve'}
-                          </button>
-                          <button className="btn btn-ghost" disabled={busyId === c.id} onClick={() => onReject(c.id)} style={{ marginLeft: 8 }}>
-                            Reject
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      {/* TILES */}
+      <div className="categories-section">
+        <h2 className="categories-section-title">Pending Categories</h2>
+        <div className="categories-grid">
+          {cats
+            .filter((c) => (c.status || "").toLowerCase() === "pending")
+            .map((c) => (
+              <div className="categories-card" key={c.id}>
+                <h3 className="categories-card-title">{c.name}</h3>
+                <p className="categories-card-desc">{c.description || "No description"}</p>
+                <p className="categories-card-date">
+                  {c.createdAt ? new Date(c.createdAt).toLocaleString() : "—"}
+                </p>
+
+                <div className="categories-card-actions">
+                  <Link className="categories-btn" to={`/admin/categories/${c.id}`}>
+                    View
+                  </Link>
+
+                  <button
+                    className="categories-btn-ghost"
+                    disabled={busyId === c.id}
+                    onClick={() => onReject(c.id)}
+                  >
+                    {busyId === c.id ? "..." : "Reject"}
+                  </button>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+
+      <div className="categories-section">
+        <h2 className="categories-section-title">Approved Categories</h2>
+        <div className="categories-grid">
+          {cats
+            .filter((c) => (c.status || "").toLowerCase() === "approved")
+            .map((c) => (
+              <div className="categories-card" key={c.id}>
+                <h3 className="categories-card-title">{c.name}</h3>
+                <p className="categories-card-desc">{c.description || "No description"}</p>
+                <p className="categories-card-date">
+                  {c.createdAt ? new Date(c.createdAt).toLocaleString() : "—"}
+                </p>
+
+                <div className="categories-card-actions">
+                  <Link className="categories-btn" to={`/admin/categories/${c.id}`}>
+                    View
+                  </Link>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
     </div>
   );
 }

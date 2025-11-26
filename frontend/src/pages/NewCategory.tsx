@@ -1,124 +1,75 @@
-// src/pages/NewCategory.tsx
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "../App.css";
-import { createCategory, approveCategory } from "../services/api";
+// src/components/NewCategory.tsx
+import React, { useState } from 'react';
+import { apiPost } from '../services/api';
 
-export default function NewCategory() {
-  const navigate = useNavigate();
+type Props = {
+  onSuccess?: (created?: any) => void;
+  onClose?: () => void;
+  initialName?: string;
+  initialDescription?: string;
+};
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+const NewCategory: React.FC<Props> = ({ onSuccess, onClose, initialName = '', initialDescription = '' }) => {
+  const [name, setName] = useState(initialName);
+  const [description, setDescription] = useState(initialDescription);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function submit(e:React.FormEvent) {
     e.preventDefault();
-    setError(null);
-
-    if (!name.trim()) {
-      setError("Category name is required");
-      return;
-    }
-
-    setSubmitting(true);
-
+    setErr(null); setMsg(null);
+    if (!name.trim()) { setErr('Name required'); return; }
+    setLoading(true);
     try {
-      // 1. Create category (backend sets status = PENDING)
-      const payload = {
-        name: name.trim(),
-        description: description.trim() || null,
-      };
-
-      const created: any = await createCategory(payload);
-
-      // Extract new category ID
-      const newId =
-        created?.id || created?.data?.id || created?.categoryId || null;
-
-      // 2. Auto-approve because ADMIN is creating it
-      if (newId) {
-        await approveCategory(newId);
-      }
-
-      // 3. Redirect to categories list
-      navigate("/admin/categories");
-    } catch (err: any) {
-      console.error("Category creation failed:", err);
-      setError(err?.message || "Failed to create category");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      const res = await apiPost('/categories', { name: name.trim(), description: description.trim() });
+      setMsg('Category created: ' + (res?.name || 'OK'));
+      setName(''); setDescription('');
+      // call parent callback
+      onSuccess?.(res);
+    } catch (e:any) {
+      setErr(e?.message || (e?.data?.message) || 'Failed');
+    } finally { setLoading(false); }
+  }
 
   return (
-    <div className="admin-root">
-      <main className="admin-main">
-        <header className="admin-topbar">
-          <h1 className="admin-title">Create New Category</h1>
-          <p className="admin-sub">
-            Enter details below to add a new category to the marketplace.
-          </p>
-        </header>
+    <div className="card page" style={{ maxWidth: 560 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ margin: 0 }}>Create Category</h2>
+        {onClose && (
+          <button onClick={onClose} aria-label="Close" style={{
+            border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer'
+          }}>×</button>
+        )}
+      </div>
 
-        <section className="panel" style={{ maxWidth: 800, padding: 20 }}>
-          <form onSubmit={handleSubmit}>
-            {/* NAME */}
-            <div style={{ marginBottom: 16 }}>
-              <label className="form-label">Category Name</label>
-              <input
-                className="form-input"
-                placeholder="e.g., Office Electronics"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-              <div className="hint">A unique name that identifies this category.</div>
-            </div>
+      <form onSubmit={submit} className="form" style={{ marginTop: 12 }}>
+        <label>
+          Name
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Stationery" />
+        </label>
 
-            {/* DESCRIPTION */}
-            <div style={{ marginBottom: 16 }}>
-              <label className="form-label">Description</label>
-              <textarea
-                className="form-textarea"
-                rows={4}
-                placeholder="Describe what items belong to this category"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-              <div className="hint">
-                A short, meaningful summary for marketplace users.
-              </div>
-            </div>
+        <label>
+          Description
+          <textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Short description" />
+        </label>
 
-            {/* ACTIONS */}
-            <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={submitting}
-              >
-                {submitting ? "Creating…" : "Create Category"}
-              </button>
+        <div className="actions" style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          {onClose && (
+            <button type="button" onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', background: '#fff' }}>
+              Cancel
+            </button>
+          )}
+          <button type="submit" disabled={loading} style={{ padding: '8px 12px', borderRadius: 8 }}>
+            {loading ? 'Creating...' : 'Create Category'}
+          </button>
+        </div>
 
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => navigate("/admin/categories")}
-              >
-                Cancel
-              </button>
-            </div>
-
-            {/* ERROR */}
-            {error && (
-              <div className="error" style={{ marginTop: 16 }}>
-                {error}
-              </div>
-            )}
-          </form>
-        </section>
-      </main>
+        {msg && <div className="success" style={{ marginTop: 10 }}>{msg}</div>}
+        {err && <div className="error" style={{ marginTop: 10 }}>{err}</div>}
+      </form>
     </div>
   );
-}
+};
+
+export default NewCategory;

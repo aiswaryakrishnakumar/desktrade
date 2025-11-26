@@ -1,10 +1,12 @@
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/DeskTradeBackendApplication.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/config/OpenApiConfig.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/config/SecurityConfig.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/config/WebConfig.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/AdminController.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/AuthController.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/CategoryController.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/ChatRestController.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/FileUploadController.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/ItemController.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/OrderController.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/controller/ReviewController.java
@@ -12,6 +14,8 @@
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/ChatMessageDto.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/CreateCategoryRequest.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/CreateItemRequest.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/CreateOrderRequest.java
+/home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/ItemDto.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/OrderRequestItemDto.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/OrderResponseDto.java
 /home/aiswaryamk/Desktop/DeskTrade/backend/src/main/java/com/desktrade/dto/ReviewRequest.java

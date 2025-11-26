@@ -1,0 +1,24 @@
+.employee-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin-top: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.employee-table th,
+.employee-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.employee-table th {
+  background: #f8fafc;
+  font-weight: 700;
+}
+
+.employee-table tr:hover {
+  background: #f1f5f9;
+}

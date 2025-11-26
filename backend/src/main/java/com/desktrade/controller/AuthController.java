@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:5180", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

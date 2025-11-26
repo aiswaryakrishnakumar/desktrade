@@ -15,4 +15,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     Page<Item> findBySellerId(Long sellerId, Pageable pageable);
     Page<Item> findByStatus(ApprovalStatus status, Pageable pageable);
     List<Item> findBySellerIdAndStatus(Long sellerId, ApprovalStatus status);
+    Page<Item> findByStatusAndActiveTrue(ApprovalStatus status, Pageable pageable);
+
 }

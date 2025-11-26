@@ -1,4 +1,3 @@
-com/desktrade/service/ItemService.class
 com/desktrade/dto/ChatMessageDto.class
 com/desktrade/controller/AdminController.class
 com/desktrade/service/CategoryService.class
@@ -25,6 +24,7 @@ com/desktrade/model/OrderStatus.class
 com/desktrade/exception/ForbiddenException.class
 com/desktrade/repository/UserRepository.class
 com/desktrade/repository/ItemSearchRepository.class
+com/desktrade/dto/ItemDto.class
 com/desktrade/dto/OrderRequestItemDto.class
 com/desktrade/controller/ReviewController.class
 com/desktrade/model/Category$CategoryBuilder.class
@@ -32,12 +32,12 @@ com/desktrade/exception/BadRequestException.class
 com/desktrade/model/Order.class
 com/desktrade/controller/UserController.class
 com/desktrade/controller/AuthController$RegisterRequest.class
-com/desktrade/controller/ItemController.class
 com/desktrade/repository/OrderRepository.class
 com/desktrade/model/Review$ReviewBuilder.class
 com/desktrade/model/Category.class
 com/desktrade/exception/ResourceNotFoundException.class
 com/desktrade/service/ReviewService.class
+com/desktrade/controller/FileUploadController.class
 com/desktrade/model/OrderItem$OrderItemBuilder.class
 com/desktrade/dto/OrderResponseDto.class
 com/desktrade/model/User.class
@@ -50,3 +50,4 @@ com/desktrade/security/JwtUtil.class
 com/desktrade/dto/CreateCategoryRequest.class
 com/desktrade/controller/OrderController.class
 com/desktrade/model/Order$OrderBuilder.class
+com/desktrade/config/WebConfig.class

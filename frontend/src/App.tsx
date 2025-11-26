@@ -1,124 +1,201 @@
 // src/App.tsx
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { type JSX } from "react";
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
 
-// Pages
-import Login from './pages/Login';
-import Admin from './pages/Admin';
-import AdminDashboard from './pages/AdminDashboard';
-import Employees from './pages/Employees';
-import Employee from './pages/Employee';
-import NewCategory from './pages/NewCategory';
-import NewEmployee from './pages/NewEmployee';
-import NewItem from './pages/NewItem';
-import CategoriesPage from './pages/categories';       // CASE-SENSITIVE: file is Categories.tsx
-import CategoryView from './pages/categoryview';      // CASE-SENSITIVE: file is CategoryView.tsx
+import AdminDashboard from "./pages/AdminDashboard";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
 
-// helper to parse JWT (same logic as your Login page)
-function parseJwt(token: string | null) {
-  try {
-    if (!token) return null;
-    const parts = token.split('.');
-    if (parts.length < 2) return null;
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return payload;
-  } catch {
-    return null;
-  }
-}
+import NewCategory from "./pages/NewCategory";
+import NewEmployee from "./pages/NewEmployee";
+import Login from "./pages/Login";
+import Employees from "./pages/Employees";
+import AdminCategories from "./pages/AdminCategories";
+// add this import at the top
+import MyBookings from "./pages/admin/MyBookings";
 
-function getToken() {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('token');
-}
 
-function getRoleFromTokenOrUser() {
-  const userRaw = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-  if (userRaw) {
-    try {
-      const u = JSON.parse(userRaw);
-      if (u?.role) return String(u.role).toLowerCase();
-      if (u?.roles && Array.isArray(u.roles) && u.roles[0]) return String(u.roles[0]).toLowerCase();
-    } catch {}
-  }
+import "./styles.css";
+
+/* ============================================================
+   AUTH HELPERS
+=============================================================== */
+const getToken = () => localStorage.getItem("token");
+const getRole = () => localStorage.getItem("role"); // "admin" or "employee"
+
+/* ============================================================
+   PROTECTED ROUTE WRAPPER
+=============================================================== */
+const ProtectedRoute = ({
+  children,
+  allow
+}: {
+  children: JSX.Element;
+  allow: string;
+}) => {
   const token = getToken();
-  const claims: any = parseJwt(token);
-  if (claims) {
-    if (claims.role) return String(claims.role).toLowerCase();
-    if (claims.roles && Array.isArray(claims.roles) && claims.roles[0]) return String(claims.roles[0]).toLowerCase();
-    if (claims.authorities && Array.isArray(claims.authorities) && claims.authorities[0]) {
-      const first = claims.authorities[0];
-      return (typeof first === 'string' ? first : first?.authority || '').toLowerCase();
-    }
-  }
-  return null;
-}
+  const role = getRole();
 
-type ProtectedProps = {
-  children: React.ReactElement;
-  require?: 'any' | 'admin' | 'employee';
+  if (!token) return <Navigate to="/login" replace />;
+  if (role !== allow) return <Navigate to="/login" replace />;
+
+  return children;
 };
 
-function ProtectedRoute({ children, require = 'any' }: ProtectedProps) {
-  const token = getToken();
-  if (!token) {
-    return <Navigate to="/" replace />;
-  }
-  if (require === 'any') return children;
-  const role = getRoleFromTokenOrUser() || '';
-  if (require === 'admin' && role.includes('admin')) return children;
-  if (require === 'employee' && (role.includes('employee') || role.includes('user'))) return children;
-  return <Navigate to="/" replace />;
-}
+/* ============================================================
+   ADMIN NAV BAR
+=============================================================== */
+const AdminTopNav: React.FC = () => {
+  const nav = useNavigate();
 
-export default function App() {
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    nav("/login");
+  };
+
+  return (
+    <header className="nav">
+      <div className="nav-inner container-wide">
+        <div className="brand">
+          <div className="logo">DT</div>
+          <div>
+            <div className="title">DeskTrade</div>
+            <div className="subtitle">Admin Console</div>
+          </div>
+        </div>
+
+        <nav className="links">
+          <Link to="/admin">Dashboard</Link>
+          <Link to="/admin/categories">Categories</Link>
+          <Link to="/admin/employees">Employees</Link>
+        </nav>
+
+        <button className="btn-logout" onClick={logout}>
+          Logout
+        </button>
+      </div>
+    </header>
+  );
+};
+
+/* ============================================================
+   LAYOUT WRAPPER (Common Layout)
+=============================================================== */
+const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const onLoginPage = location.pathname === "/login";
+  const role = getRole();
+
   return (
     <>
-    <BrowserRouter>
-      <Routes>
-        {/* Public */}
-        <Route path="/" element={<Login />} />
+      <div className="aurora-bg" />
+      
+      {/* Admin navbar only for admin */}
+      {!onLoginPage && role === "admin" && <AdminTopNav />}
 
-        {/* Admin area (layout via Admin) */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute require="admin">
-              <Admin />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="employees" element={<Employees />} />
-          <Route path="employees/new" element={<NewEmployee />} />
-          <Route path="categories" element={<CategoriesPage />} />
-          <Route path="categories/new" element={<NewCategory />} />
-          <Route path="categories/:id" element={<CategoryView />} />
-        </Route>
-
-        {/* Employee/Seller area */}
-        <Route
-          path="/employee"
-          element={
-            <ProtectedRoute require="employee">
-              <Employee />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/items/new"
-          element={
-            <ProtectedRoute require="employee">
-              <NewItem />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      <main>{children}</main>
     </>
   );
-}
+};
+
+/* ============================================================
+   MAIN APP ROUTER
+=============================================================== */
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <LayoutWrapper>
+        <Routes>
+
+          {/* DEFAULT → LOGIN */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* LOGIN PAGE */}
+          <Route path="/login" element={<Login />} />
+
+          {/* ====================== ADMIN ROUTES ====================== */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allow="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/categories"
+            element={
+              <ProtectedRoute allow="admin">
+                <AdminCategories />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/categories/new"
+            element={
+              <ProtectedRoute allow="admin">
+                <NewCategory />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/employees"
+            element={
+              <ProtectedRoute allow="admin">
+                <Employees />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/employees/new"
+            element={
+              <ProtectedRoute allow="admin">
+                <NewEmployee />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ====================== EMPLOYEE ROUTES ====================== */}
+          <Route
+            path="/employee"
+            element={
+              <ProtectedRoute allow="employee">
+                <EmployeeDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ====================== EMPLOYEE ROUTES ====================== */}
+<Route
+  path="/employee"
+  element={
+    <ProtectedRoute allow="employee">
+      <EmployeeDashboard />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/employee/bookings"
+  element={
+    <ProtectedRoute allow="employee">
+      <MyBookings />
+    </ProtectedRoute>
+  }
+/>
+
+
+          {/* 404 FALLBACK */}
+          <Route path="*" element={<div style={{ padding: 20 }}>Page not found</div>} />
+
+        </Routes>
+      </LayoutWrapper>
+    </BrowserRouter>
+  );
+};
+
+export default App;

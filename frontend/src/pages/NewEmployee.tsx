@@ -1,89 +1,122 @@
-import { useState } from 'react';
+// src/pages/NewEmployee.tsx (or .jsx)
+/* Updated: normalize role to DB-friendly value before sending (strip "ROLE_" prefix) */
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../App.css';
-import { createEmployee } from '../services/api';
+import { apiPost } from '../services/api';
 
-export default function NewEmployee() {
-  const navigate = useNavigate();
-  const [fullName, setFullName] = useState('');
+const ROLE_OPTIONS = [
+  { value: 'ROLE_EMPLOYEE', label: 'Employee' },
+  { value: 'ROLE_ADMIN', label: 'Admin' },
+];
+
+const NewEmployee: React.FC = () => {
+  const nav = useNavigate();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('EMPLOYEE');
   const [department, setDepartment] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState(ROLE_OPTIONS[0].value);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
-  const submit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setError(null);
-    if (!fullName.trim() || !email.trim() || !password) {
-      setError('Name, email and password are required');
+  function normalizeRole(r: string) {
+    // remove leading ROLE_ prefix if present, and ensure uppercase canonical form
+    if (!r) return r;
+    return r.replace(/^ROLE_/i, '').toUpperCase();
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setMsg(null);
+
+    const tName = name.trim();
+    const tEmail = email.trim();
+    if (!tName || !tEmail || !password) {
+      setErr('Please fill name, email and password');
       return;
     }
-    setLoading(true);
-    const parts = fullName.trim().split(/\s+/);
-    const firstName = parts.shift() || '';
-    const lastName = parts.join(' ') || '';
-    const sendRole = role === 'EMPLOYEE' ? 'ROLE_EMPLOYEE' : role === 'ADMIN' ? 'ROLE_ADMIN' : role;
-    try {
-      // send role as EMPLOYEE or ADMIN
-      await createEmployee({ firstName, lastName, email: email.trim(), password, role: sendRole, department } as any);
-      navigate('/admin/employees');
-    } catch (err) {
-      console.error(err);
-      setError('Failed to create employee');
-    } finally {
-      setLoading(false);
+
+    // small client-side email sanity check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tEmail)) {
+      setErr('Please enter a valid email address');
+      return;
     }
-  };
+
+    setBusy(true);
+    try {
+      const body = {
+        name: tName,
+        email: tEmail,
+        department: department.trim() || null,
+        password,
+        // normalize to value DB likely expects: "ADMIN" / "EMPLOYEE"
+        role: normalizeRole(role),
+      };
+
+      // This endpoint may require auth; ensure the currently logged-in user has permission
+      const res = await apiPost('/auth/register', body);
+      setMsg('Employee created: ' + (res?.name ?? res?.email ?? 'OK'));
+      // optionally navigate back to employees list after short delay
+      setTimeout(() => nav('/employees'), 900);
+    } catch (e: any) {
+      console.error(e);
+      // try to extract friendly message from backend response
+      const backendMsg = e?.response?.data?.message ?? e?.message ?? null;
+      setErr(backendMsg || 'Failed to create employee');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <div className="admin-root">
-      <main className="main-area">
-        <header className="topbar">
-          <h1 className="page-title">Add New Employee</h1>
-        </header>
+    <div className="page container">
+      <div className="card" style={{ maxWidth: 720, margin: '16px auto' }}>
+        <h2>Create Employee</h2>
+        <form className="form" onSubmit={submit}>
+          <label>
+            Name
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Full name" />
+          </label>
 
-        <section style={{ maxWidth: 900, marginTop: 20 }}>
-          <form className="panel" onSubmit={submit} style={{ padding: 20 }}>
-            <div style={{ marginBottom: 12 }}>
-              <label>Full Name</label>
-              <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g., Jane Doe" />
-            </div>
+          <label>
+            Email
+            <input value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" />
+          </label>
 
-            <div style={{ marginBottom: 12 }}>
-              <label>Work Email</label>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="name@company.com" required />
-            </div>
+          <label>
+            Department
+            <input value={department} onChange={e => setDepartment(e.target.value)} placeholder="e.g. Sales" />
+          </label>
 
-            <div style={{ marginBottom: 12 }}>
-              <label>Initial Password</label>
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Enter an initial password" required />
-            </div>
+          <label>
+            Password
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Strong password"
+            />
+          </label>
 
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <label>Role</label>
-                <select value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="EMPLOYEE">EMPLOYEE</option>
-                  <option value="ADMIN">ADMIN</option>
-                </select>
-              </div>
-              <div style={{ flex: 1 }}>
-                <label>Department</label>
-                <input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g., Engineering" />
-              </div>
-            </div>
+          <label>
+            Role
+            <select value={role} onChange={e => setRole(e.target.value)}>
+              {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+          </label>
 
-            <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-              <button type="submit" className="btn btn-approve" disabled={loading}>{loading ? 'Adding…' : 'Add Employee'}</button>
-              <button type="button" className="btn" onClick={() => navigate('/admin')}>Cancel</button>
-            </div>
+          <div className="actions">
+            <button type="submit" disabled={busy}>{busy ? 'Creating...' : 'Create Employee'}</button>
+          </div>
 
-            {error && <div className="error" style={{ marginTop: 12 }}>{error}</div>}
-          </form>
-        </section>
-      </main>
+          {msg && <div className="success" role="status" style={{ marginTop: 8 }}>{msg}</div>}
+          {err && <div className="error" role="alert" style={{ marginTop: 8 }}>{err}</div>}
+        </form>
+      </div>
     </div>
   );
-}
+};
+
+export default NewEmployee;
