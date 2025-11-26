@@ -1,343 +1,156 @@
-// // src/pages/Login.tsx
-// import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import '../App.css'; // adjust if you put CSS elsewhere
-// import banner from '../assets/loginimage.png';
-
-// function parseJwt(token: string | null) {
-//   try {
-//     if (!token) return null;
-//     const parts = token.split('.');
-//     if (parts.length < 2) return null;
-//     const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-//     return payload;
-//   } catch {
-//     return null;
-//   }
-// }
-
-// export default function Login() {
-//   const [email, setEmail] = useState('');
-//   const [password, setPassword] = useState('');
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-//   const [loading, setLoading] = useState(false);
-//   const navigate = useNavigate();
-
-//   // Prefer VITE_API_BASE if set, otherwise use '/api' (Vite dev proxy expects /api)
-//   const API_BASE = (import.meta as any).env?.VITE_API_BASE || '/api';
-
-//   async function submit(e?: React.FormEvent) {
-//     if (e && typeof e.preventDefault === 'function') e.preventDefault();
-//     setError(null);
-//     setLoading(true);
-//     try {
-//       const payload = { email: email.trim(), password };
-//       const url = `${API_BASE}/auth/login`;
-//       console.log('[Login] POST', url, payload);
-
-//       const res = await fetch(url, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify(payload),
-//       });
-
-//       console.log('[Login] response status:', res.status, res.statusText);
-
-//       if (!res.ok) {
-//         // robust error extraction
-//         let body: any = null;
-//         try {
-//           const ct = res.headers.get('content-type') || '';
-//           body = ct.includes('application/json') ? await res.json() : await res.text();
-//         } catch (e) {
-//           body = await res.text().catch(() => null);
-//         }
-
-//         if (res.status === 401) setError('Invalid credentials. Please check email and password.');
-//         else if (res.status === 500) setError('Server error. Try again later.');
-//         else setError((body && (body.message || body.error)) || `Login failed (${res.status})`);
-//         setLoading(false);
-//         return;
-//       }
-
-//       const data = await res.json().catch(() => ({}));
-//       console.log('[Login] parsed body:', data);
-
-//       const token = data?.token || data?.accessToken || data?.jwt || data?.access_token || null;
-
-//       if (!token) {
-//         setError('Login succeeded but server did not return a token. Check backend response.');
-//         setLoading(false);
-//         return;
-//       }
-
-//       // store token + optionally user
-//       localStorage.setItem('token', token);
-//       if (data?.user) localStorage.setItem('user', JSON.stringify(data.user));
-
-//       // derive role (same approach as earlier)
-//       let role: string | null = null;
-//       if (data?.user?.role) role = data.user.role;
-//       if (!role && data?.user?.roles) {
-//         const r = data.user.roles;
-//         role = Array.isArray(r) ? r[0] : r;
-//       }
-//       if (!role) {
-//         const claims = parseJwt(token);
-//         if (claims) {
-//           role = claims.role || claims.roles || claims.authorities || null;
-//           if (Array.isArray(role)) role = role[0];
-//           if (!role && claims.authorities && Array.isArray(claims.authorities)) {
-//             const first = claims.authorities[0];
-//             role = typeof first === 'string' ? first : first?.authority;
-//           }
-//         }
-//       }
-
-//       // navigate based on role
-//       if (role) {
-//         const r = String(role).toLowerCase();
-//         if (r.includes('admin')) { navigate('/admin'); setLoading(false); return; }
-//         if (r.includes('employee') || r.includes('user')) { navigate('/employee'); setLoading(false); return; }
-//       }
-
-//       // default fallback
-//       navigate('/employee');
-//     } catch (err: any) {
-//       console.error('Login failed', err);
-//       setError('Network error. Check backend and proxy configuration. See console for details.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
-
-//   return (
-//     <div className="login-page center-screen">
-//       <div className="login-card" role="dialog" aria-labelledby="signin-title">
-//         <div className="left-panel">
-//           <div className="brand-row">
-//             <div className="brand-icon">🏷️</div>
-//             <div>
-//               <h3 className="brand-title">DeskTrade</h3>
-//               <p className="brand-sub">Your Internal Employee Marketplace.</p>
-//             </div>
-//           </div>
-//           <div className="illustration">
-//             <img src={banner} alt="Team at desk" className="illustration-img" />
-//           </div>
-//         </div>
-
-//         <div className="right-panel">
-//           <div>
-//             <h1 className="page-title" id="signin-title">Sign In</h1>
-//             <p className="sub">Welcome back! Please enter your details.</p>
-//           </div>
-
-//           <form onSubmit={submit} className="login-form" aria-label="Login form">
-//             <label className="form-label">
-//               <div className="label-text">Email Address</div>
-//               <input
-//                 type="email"
-//                 value={email}
-//                 onChange={(e) => setEmail(e.target.value)}
-//                 placeholder="Enter your email address"
-//                 required
-//                 className="form-input"
-//               />
-//             </label>
-
-//             <label className="form-label">
-//               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-//                 <div className="label-text">Password</div>
-//                 <button type="button" className="link-button" onClick={() => {/* placeholder */}}>Forgot Password?</button>
-//               </div>
-
-//               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-//                 <input
-//                   type={showPassword ? 'text' : 'password'}
-//                   value={password}
-//                   onChange={(e) => setPassword(e.target.value)}
-//                   placeholder="Enter your password"
-//                   required
-//                   className="form-input"
-//                 />
-//                 <button
-//                   type="button"
-//                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-//                   onClick={() => setShowPassword((s) => !s)}
-//                   className="eye-button"
-//                 >
-//                   {showPassword ? '🙈' : '👁️'}
-//                 </button>
-//               </div>
-//             </label>
-
-//             <div style={{ marginTop: 12 }}>
-//               <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%' }}>
-//                 {loading ? 'Signing in...' : 'Log In'}
-//               </button>
-//             </div>
-
-//             {error && <div className="error" role="alert" style={{ marginTop: 12 }}>{error}</div>}
-
-//             <p className="help" style={{ marginTop: 16 }}>
-//               Need help? <a href="#" onClick={(e) => e.preventDefault()}>Contact Support</a>
-//             </p>
-//           </form>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // src/pages/Login.tsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../App.css'; // keep as before (we updated CSS below)
-import banner from '../assets/loginimage.png';
-import type { JSX } from 'react/jsx-runtime';
+import React, { useState, type JSX } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles.css";
+import banner from "../assets/loginimage.png";
 
-function parseJwt(token: string | null) {
+/** decode JWT payload (safe) */
+function parseJwt(token: string | null): Record<string, any> | null {
+  if (!token) return null;
   try {
-    if (!token) return null;
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length < 2) return null;
-    const payload = JSON.parse(
-      atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
-    );
-    return payload;
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = atob(payload);
+    return JSON.parse(json);
   } catch {
     return null;
   }
 }
 
-export default function Login(): JSX.Element {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const navigate = useNavigate();
+/** Try to derive a single canonical role string from token payload or response.user */
+function getRoleFromResponseOrToken(data: any, token: string | null): string | null {
+  // 1) try server-sent user object
+  if (data?.user?.role) {
+    return String(data.user.role);
+  }
+  if (data?.user?.roles) {
+    const r = data.user.roles;
+    if (Array.isArray(r)) return String(r[0]);
+    return String(r);
+  }
 
-  // Prefer VITE_API_BASE if set, otherwise use '/api' (Vite dev proxy expects /api)
-  const API_BASE = (import.meta as any).env?.VITE_API_BASE || '/api';
+  // 2) try token claims
+  const claims = parseJwt(token);
+  if (!claims) return null;
+
+  // common claim keys
+  const claimCandidates = ["role", "roles", "authorities", "authority", "scope"];
+  for (const k of claimCandidates) {
+    const v = claims[k];
+    if (!v) continue;
+    if (Array.isArray(v) && v.length > 0) return String(v[0]);
+    if (typeof v === "string") return v;
+    // authority objects like [{authority: "ROLE_ADMIN"}]
+    if (Array.isArray(v) && typeof v[0] === "object" && v[0].authority) return String(v[0].authority);
+  }
+
+  // some JWTs include authorities under nested claim 'authorities' as array of strings or objects
+  if (claims?.authorities) {
+    const a = claims.authorities;
+    if (Array.isArray(a)) {
+      if (a.length === 0) return null;
+      const first = a[0];
+      if (typeof first === "string") return first;
+      if (typeof first === "object") return first.authority ?? first.role ?? null;
+    }
+  }
+
+  return null;
+}
+
+/** Normalize to 'admin' or 'employee' */
+function normalizeRole(rawRole: string | null): "admin" | "employee" | null {
+  if (!rawRole) return null;
+  const r = String(rawRole).toUpperCase();
+
+  if (r.includes("ROLE_ADMIN") || r.includes("ADMIN")) return "admin";
+  if (r.includes("ROLE_EMPLOYEE") || r.includes("EMPLOYEE") || r.includes("ROLE_USER") || r.includes("USER")) return "employee";
+
+  // fallback: if role contains 'STAFF' treat as employee
+  if (r.includes("STAFF")) return "employee";
+
+  return null;
+}
+
+export default function Login(): JSX.Element {
+  const nav = useNavigate();
+  const API_BASE = (import.meta as any)?.env?.VITE_API_BASE ?? "/api";
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit(e?: React.FormEvent) {
-    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    e?.preventDefault?.();
     setError(null);
     setLoading(true);
-    try {
-      const payload = { email: email.trim(), password };
-      const url = `${API_BASE}/auth/login`;
-      // console.debug('[Login] POST', url, payload);
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      // console.debug('[Login] response status:', res.status, res.statusText);
-
       if (!res.ok) {
-        // robust error extraction
-        let body: any = null;
-        try {
-          const ct = res.headers.get('content-type') || '';
-          body = ct.includes('application/json') ? await res.json() : await res.text();
-        } catch (e) {
-          body = await res.text().catch(() => null);
-        }
-
-        if (res.status === 401) setError('Invalid credentials. Please check email and password.');
-        else if (res.status === 500) setError('Server error. Try again later.');
-        else setError((body && (body.message || body.error)) || `Login failed (${res.status})`);
+        if (res.status === 401) setError("Invalid email or password.");
+        else setError(`Login failed (${res.status}).`);
         setLoading(false);
         return;
       }
 
       const data = await res.json().catch(() => ({}));
-      // console.debug('[Login] parsed body:', data);
-
-      const token = data?.token || data?.accessToken || data?.jwt || data?.access_token || null;
+      const token = data?.token ?? data?.accessToken ?? data?.jwt ?? data?.access_token ?? null;
 
       if (!token) {
-        setError('Login succeeded but server did not return a token. Check backend response.');
+        setError("Login succeeded but server did not return a token.");
         setLoading(false);
         return;
       }
 
-      // store token + optionally user
-      localStorage.setItem('token', token);
-      if (data?.user) localStorage.setItem('user', JSON.stringify(data.user));
+      // persist token
+      localStorage.setItem("token", token);
+      if (data?.user) localStorage.setItem("user", JSON.stringify(data.user));
 
-      // derive role (same approach as earlier)
-      let role: string | null = null;
-      if (data?.user?.role) role = data.user.role;
-      if (!role && data?.user?.roles) {
-        const r = data.user.roles;
-        role = Array.isArray(r) ? r[0] : r;
+      // derive role (from response first, then token)
+      const rawRole = getRoleFromResponseOrToken(data, token);
+      const role = normalizeRole(rawRole);
+
+      if (role === "admin") {
+        localStorage.setItem("role", "admin");
+        nav("/admin");
+        return;
       }
-      if (!role) {
-        const claims = parseJwt(token);
-        if (claims) {
-          role = claims.role || claims.roles || claims.authorities || null;
-          if (Array.isArray(role)) role = role[0];
-          if (!role && claims.authorities && Array.isArray(claims.authorities)) {
-            const first = claims.authorities[0];
-            role = typeof first === 'string' ? first : first?.authority;
-          }
-        }
+      if (role === "employee") {
+        localStorage.setItem("role", "employee");
+        nav("/employee");
+        return;
       }
 
-      // navigate based on role
-      if (role) {
-        const r = String(role).toLowerCase();
-        if (r.includes('admin')) { navigate('/admin'); setLoading(false); return; }
-        if (r.includes('employee') || r.includes('user')) { navigate('/employee'); setLoading(false); return; }
+      // fallback: try to inspect token claims for any ROLE_ADMIN/ROLE_EMPLOYEE substrings
+      const claims = parseJwt(token);
+      const joined = claims ? JSON.stringify(claims).toUpperCase() : "";
+      if (joined.includes("ROLE_ADMIN")) {
+        localStorage.setItem("role", "admin");
+        nav("/admin");
+        return;
+      }
+      if (joined.includes("ROLE_EMPLOYEE") || joined.includes("ROLE_USER")) {
+        localStorage.setItem("role", "employee");
+        nav("/employee");
+        return;
       }
 
-      // default fallback
-      navigate('/employee');
+      // final fallback: default to employee
+      localStorage.setItem("role", "employee");
+      nav("/employee");
     } catch (err: any) {
-      // console.error('Login failed', err);
-      setError('Network error. Check backend and proxy configuration. See console for details.');
+      console.error("Login error:", err);
+      setError("Network error. Check backend or proxy configuration.");
     } finally {
       setLoading(false);
     }

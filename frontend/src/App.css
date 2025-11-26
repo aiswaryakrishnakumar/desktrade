@@ -1,4 +1,4 @@
-/* paste this into src/App.css or src/styles/admin.css */
+paste this into src/App.css or src/styles/admin.css
 /* Admin / Employee layout (styles used by EmployeeDashboard / AdminDashboard) */
 .admin-root { display:flex; min-height:100vh; background:linear-gradient(180deg,#f6f8fa,#f2f5f8); }
 .dt-sidebar { width:260px; padding:20px; border-right:1px solid #eee; background:#fff; }
@@ -590,3 +590,21 @@
   .items-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
   .item-thumb { height: 160px; }
 }
+
+
+
+
+
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* small utility classes used by components */
+.btn { @apply px-3 py-2 rounded-md inline-flex items-center justify-center; }
+.btn-primary { @apply bg-indigo-600 text-white; }
+.btn-ghost { @apply bg-transparent border; }
+
+/* small visual tweak so the layout appears like design */
+html, body, #root { height: 100%; }
+body { @apply bg-slate-50; }

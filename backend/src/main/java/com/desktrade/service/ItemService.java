@@ -58,9 +58,20 @@ public class ItemService {
         return itemRepository.save(item);
     }
 
-    public Page<Item> listApprovedItemsByCategory(Long categoryId, Pageable p) {
-        return itemRepository.findByCategoryIdAndStatusAndActiveTrue(categoryId, ApprovalStatus.APPROVED, p);
-    }
+    // public Page<Item> listApprovedItemsByCategory(Long categoryId, Pageable p) {
+    //     return itemRepository.findByCategoryIdAndStatusAndActiveTrue(categoryId, ApprovalStatus.APPROVED, p);
+    // }
+
+   public Page<ItemDto> listApprovedItemsByCategory(Long categoryId, Pageable p) {
+    Page<Item> page = itemRepository.findByCategoryIdAndStatusAndActiveTrue(
+            categoryId,
+            ApprovalStatus.APPROVED,
+            p
+    );
+    return page.map(ItemDto::from);
+}
+
+
 
     public Item getItemDetails(Long itemId, String requesterEmail) {
         Item item = itemRepository.findById(itemId)
@@ -122,7 +133,15 @@ public class ItemService {
         return itemRepository.save(item);
     }
 
-    public Page<Item> listPendingItems(Pageable p) {
-        return itemRepository.findByStatus(ApprovalStatus.PENDING, p);
-    }
+   public Page<ItemDto> listPendingItems(Pageable p) {
+    Page<Item> page = itemRepository.findByStatus(ApprovalStatus.PENDING, p);
+    return page.map(ItemDto::from);
+}
+
+    public Page<ItemDto> listAllApproved(Pageable p) {
+    Page<Item> page = itemRepository.findByStatus(ApprovalStatus.APPROVED, p);
+    return page.map(ItemDto::from);
+}
+
+
 }

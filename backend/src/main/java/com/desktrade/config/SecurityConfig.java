@@ -43,6 +43,7 @@ public class SecurityConfig {
         return new JwtFilter(jwtUtils, userDetailsService);
     }
 
+    // Single AuthenticationManager bean (used by controllers/services to authenticate)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -51,6 +52,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .cors() // enable CORS support and use CorsConfigurationSource bean below
+            .and()
             // Disable CSRF for stateless REST APIs
             .csrf(csrf -> csrf.disable())
 
@@ -65,6 +68,11 @@ public class SecurityConfig {
                 // anything else requires authentication
                 .anyRequest().authenticated()
             )
+
+            // register the custom authentication provider
+            .authenticationProvider(authenticationProvider())
+
+            // add JWT filter before the username/password filter
             .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -82,22 +90,26 @@ public class SecurityConfig {
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
- 
-    @Bean
-    public AuthenticationManager authenticationManagerr(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
- 
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+
+        // Frontend origins — include the port you're using (5178) and common variants
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5178",
+            "http://127.0.0.1:5178",
+            "http://localhost:5180",
+            "http://localhost:5173", // keep previous commonly used ports if needed
+            "http://localhost:3000"
+        ));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+        // allow common headers and Authorization for JWT tokens
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
+        config.setAllowCredentials(true); // required if front-end sends cookies or credentials
         config.setExposedHeaders(List.of("Authorization", "Content-Type"));
- 
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

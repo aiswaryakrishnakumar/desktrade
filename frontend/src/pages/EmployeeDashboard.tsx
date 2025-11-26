@@ -1,476 +1,335 @@
-// // src/pages/EmployeeDashboard.tsx
-// import { useEffect, useMemo, useState, type JSX } from 'react';
-// import { Link } from 'react-router-dom';
-// import { getEmployees } from '../services/api';
-
-// type Employee = {
-//   id?: string | number;
-//   name?: string;
-//   email?: string;
-//   role?: string;
-//   status?: string;
-//   department?: string;
-//   createdAt?: string;
-// };
-
-// export default function EmployeeDashboard(): JSX.Element {
-//   const [employees, setEmployees] = useState<Employee[]>([]);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-
-//   // UI
-//   const [query, setQuery] = useState('');
-//   const [tab, setTab] = useState<'all' | 'active' | 'inactive'>('all');
-//   const [sortBy, setSortBy] = useState<'newest' | 'name-asc' | 'name-desc'>('newest');
-
-//   // pagination
-//   const [page, setPage] = useState(1);
-//   const PAGE_SIZE = 8;
-
-//   // load employees (normalizes common shapes)
-//   useEffect(() => {
-//     let mounted = true;
-//     const load = async () => {
-//       setLoading(true);
-//       setError(null);
-//       try {
-//         const res: any = await getEmployees().catch(() => []);
-//         const raw = Array.isArray(res) ? res : res?.content || res?.data || res;
-//         if (!mounted) return;
-//         setEmployees(raw || []);
-//       } catch (err: any) {
-//         console.error('Failed to load employees', err);
-//         if (mounted) setError('Failed to load employees');
-//       } finally {
-//         if (mounted) setLoading(false);
-//       }
-//     };
-//     load();
-//     return () => { mounted = false; };
-//   }, []);
-
-//   const filtered = useMemo(() => {
-//     let out = employees.slice();
-//     if (query.trim()) {
-//       const q = query.trim().toLowerCase();
-//       out = out.filter(e =>
-//         String(e.name || '').toLowerCase().includes(q) ||
-//         String(e.email || '').toLowerCase().includes(q) ||
-//         String(e.department || '').toLowerCase().includes(q)
-//       );
-//     }
-//     if (tab === 'active') out = out.filter(e => (String(e.status || '').toLowerCase() === 'active' || String(e.status || '').toLowerCase() === 'enabled'));
-//     if (tab === 'inactive') out = out.filter(e => (String(e.status || '').toLowerCase() === 'inactive' || String(e.status || '').toLowerCase() === 'disabled' || !e.status));
-//     if (sortBy === 'name-asc') out.sort((a,b) => String(a.name || '').localeCompare(String(b.name || '')));
-//     else if (sortBy === 'name-desc') out.sort((a,b) => String(b.name || '').localeCompare(String(a.name || '')));
-//     else out.sort((a,b) => {
-//       const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-//       const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-//       return tb - ta;
-//     });
-//     return out;
-//   }, [employees, query, tab, sortBy]);
-
-//   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-//   useEffect(() => { if (page > totalPages) setPage(1); }, [totalPages]);
-//   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-//   return (
-//     <div className="min-h-screen bg-slate-50 p-6">
-//       <div className="max-w-6xl mx-auto">
-//         {/* Header */}
-//         <div className="flex items-start justify-between mb-6 gap-4">
-//           <div>
-//             <h1 className="text-2xl font-semibold">Employee Dashboard</h1>
-//             <p className="text-sm text-slate-500 mt-1">Manage employees, roles and status.</p>
-//           </div>
-
-//           <div className="flex items-center gap-3">
-//             <input
-//               aria-label="Search employees"
-//               placeholder="Search by name, email or department..."
-//               value={query}
-//               onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-//               className="px-3 py-2 rounded-md border bg-white shadow-sm text-sm w-80"
-//             />
-
-//             <select
-//               value={sortBy}
-//               onChange={(e) => setSortBy(e.target.value as any)}
-//               className="px-3 py-2 rounded-md border bg-white text-sm"
-//             >
-//               <option value="newest">Newest</option>
-//               <option value="name-asc">Name: A → Z</option>
-//               <option value="name-desc">Name: Z → A</option>
-//             </select>
-
-//             <Link to="/employees/new" className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm text-sm">
-//               + Add Employee
-//             </Link>
-//           </div>
-//         </div>
-
-//         {/* stats + tabs */}
-//         <div className="grid grid-cols-4 gap-4 mb-6">
-//           <div className="bg-white p-4 rounded-lg shadow">
-//             <div className="text-sm text-slate-500">Total Employees</div>
-//             <div className="text-2xl font-semibold">{employees.length}</div>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow">
-//             <div className="text-sm text-slate-500">Active</div>
-//             <div className="text-2xl font-semibold">{employees.filter(e => String(e.status || '').toLowerCase() === 'active').length}</div>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow">
-//             <div className="text-sm text-slate-500">Inactive</div>
-//             <div className="text-2xl font-semibold">{employees.filter(e => String(e.status || '').toLowerCase() !== 'active').length}</div>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow">
-//             <div className="text-sm text-slate-500">Departments</div>
-//             <div className="text-2xl font-semibold">{Array.from(new Set(employees.map(e => e.department || 'Unassigned'))).length}</div>
-//           </div>
-//         </div>
-
-//         {/* Tabs */}
-//         <div className="flex items-center justify-between mb-4">
-//           <div className="flex items-center gap-2">
-//             {(['all','active','inactive'] as const).map(t => (
-//               <button
-//                 key={t}
-//                 onClick={() => { setTab(t); setPage(1); }}
-//                 className={`px-3 py-2 rounded-full text-sm ${tab === t ? 'bg-indigo-600 text-white' : 'bg-white shadow-sm text-slate-700'}`}
-//               >
-//                 {t[0].toUpperCase() + t.slice(1)}
-//               </button>
-//             ))}
-//           </div>
-
-//           <div className="text-sm text-slate-500">Showing {(page-1)*PAGE_SIZE + 1} - {Math.min(page*PAGE_SIZE, filtered.length)} of {filtered.length}</div>
-//         </div>
-
-//         {/* Content */}
-//         <section>
-//           {loading && (
-//             <div className="grid grid-cols-3 gap-6">
-//               {Array.from({ length: 3 }).map((_, i) => (
-//                 <div key={i} className="bg-white rounded-lg p-4 animate-pulse">
-//                   <div className="h-6 bg-slate-200 rounded w-3/4 mb-4" />
-//                   <div className="h-4 bg-slate-200 rounded w-1/2 mb-2" />
-//                   <div className="h-4 bg-slate-200 rounded w-2/3" />
-//                 </div>
-//               ))}
-//             </div>
-//           )}
-
-//           {error && <div className="p-4 bg-red-50 text-red-700 rounded mb-4">{error}</div>}
-
-//           {!loading && filtered.length === 0 && (
-//             <div className="p-8 bg-white rounded shadow text-center">No employees found — try clearing filters or add a new employee.</div>
-//           )}
-
-//           {!loading && filtered.length > 0 && (
-//             <>
-//               <div className="grid grid-cols-3 gap-6">
-//                 {pageItems.map(emp => (
-//                   <div key={String(emp.id)} className="bg-white rounded-lg shadow p-4 flex flex-col">
-//                     <div className="flex items-start justify-between gap-4">
-//                       <div>
-//                         <div className="text-lg font-semibold">{emp.name || `#${emp.id}`}</div>
-//                         <div className="text-sm text-slate-500">{emp.email}</div>
-//                         <div className="text-sm text-slate-500 mt-2">{emp.department || 'Unassigned'}</div>
-//                       </div>
-
-//                       <div className="text-right">
-//                         <div className={`px-2 py-1 rounded-full text-xs ${String(emp.status || '').toLowerCase() === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-//                           {emp.status || 'Inactive'}
-//                         </div>
-//                         <div className="text-sm text-slate-400 mt-2">{emp.createdAt ? new Date(emp.createdAt).toLocaleDateString() : '—'}</div>
-//                       </div>
-//                     </div>
-
-//                     <div className="mt-4 flex gap-2">
-//                       <Link to={`/employees/${emp.id}`} className="px-3 py-2 border rounded text-sm">View</Link>
-//                       <Link to={`/employees/${emp.id}/edit`} className="px-3 py-2 border rounded text-sm">Edit</Link>
-//                       <button className="ml-auto px-3 py-2 bg-indigo-600 text-white rounded text-sm">Message</button>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </div>
-
-//               {/* pagination */}
-//               <div className="mt-6 flex items-center justify-between">
-//                 <div className="text-sm text-slate-500">Page {page} of {totalPages}</div>
-//                 <div className="flex items-center gap-2">
-//                   <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page <= 1} className="px-3 py-1 border rounded disabled:opacity-50">Prev</button>
-//                   <div className="px-3">{page} / {totalPages}</div>
-//                   <button onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page >= totalPages} className="px-3 py-1 border rounded disabled:opacity-50">Next</button>
-//                 </div>
-//               </div>
-//             </>
-//           )}
-//         </section>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // src/pages/EmployeeDashboard.tsx
-import { useEffect, useMemo, useState, type JSX } from 'react';
-import { Link } from 'react-router-dom';
-import { getEmployees } from '../services/api';
+import React, { useEffect, useState } from "react";
+import ItemCard from "../components/ItemCard";
+import UploadForm from "../components/UploadForm";
+import BookingsDrawer from "../components/BookingsDrawer";
+import NewCategory from "../pages/NewCategory";
+import { api, createOrder, fetchMyOrders } from "../services/api";
+import "../styles/employee.css";
 
-type Employee = {
-  id?: string | number;
-  name?: string;
-  email?: string;
-  role?: string;
-  status?: string;
-  department?: string;
-  createdAt?: string;
-};
+function parseJwt(token: string | null) {
+  if (!token) return null;
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+}
 
-export default function EmployeeDashboard(): JSX.Element {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+export default function EmployeeDashboard() {
+  const [items, setItems] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [cat, setCat] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [openBookings, setOpenBookings] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // UI
-  const [query, setQuery] = useState('');
-  const [tab, setTab] = useState<'all' | 'active' | 'inactive'>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'name-asc' | 'name-desc'>('newest');
+  const [sortBy, setSortBy] = useState<"recent" | "price-asc" | "price-desc">("recent");
 
-  // pagination
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 8;
+  // New: modal control for Add Category
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
-  // load employees (normalizes common shapes)
+  const token = localStorage.getItem("token");
+  const me = parseJwt(token);
+
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-
-      // Avoid calling protected API when no token present (prevents 401)
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (!token) {
-        if (mounted) {
-          setError('Not authenticated. Please sign in to view employees.');
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const res: any = await getEmployees().catch(() => []);
-        // normalize shapes: array | { content: [...] } | { data: [...] } | object
-        const raw = Array.isArray(res) ? res : res?.content || res?.data || res;
-        if (!mounted) return;
-        setEmployees(raw || []);
-      } catch (err: any) {
-        console.error('Failed to load employees', err);
-        if (mounted) {
-          if (err?.status === 401) setError('Session expired or unauthorized. Please login again.');
-          else setError('Failed to load employees');
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    load();
-    return () => { mounted = false; };
+    if (!token) return;
+    fetchCategories();
+    fetchItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filtered = useMemo(() => {
-    let out = employees.slice();
-
-    if (query.trim()) {
-      const q = query.trim().toLowerCase();
-      out = out.filter(e =>
-        String(e.name || '').toLowerCase().includes(q) ||
-        String(e.email || '').toLowerCase().includes(q) ||
-        String(e.department || '').toLowerCase().includes(q)
-      );
+  // Auto-hide toasts
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 3000);
+      return () => clearTimeout(timer);
     }
+  }, [error, success]);
 
-    if (tab === 'active') {
-      out = out.filter(e => (String(e.status || '').toLowerCase() === 'active' || String(e.status || '').toLowerCase() === 'enabled'));
-    } else if (tab === 'inactive') {
-      out = out.filter(e => (String(e.status || '').toLowerCase() === 'inactive' || String(e.status || '').toLowerCase() === 'disabled' || !e.status));
+  async function fetchCategories() {
+    try {
+      const res = await api("/categories");
+      let arr: any[] = [];
+      if (Array.isArray(res)) arr = res;
+      else if (res?.content && Array.isArray(res.content)) arr = res.content;
+      else if (res?.data && Array.isArray(res.data)) arr = res.data;
+      else arr = [];
+      setCategories(arr);
+    } catch (e) {
+      console.error("fetchCategories error:", e);
+      setError("Failed to load categories");
+      setCategories([]);
     }
+  }
 
-    if (sortBy === 'name-asc') out.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
-    else if (sortBy === 'name-desc') out.sort((a, b) => String(b.name || '').localeCompare(String(a.name || '')));
-    else out.sort((a, b) => {
-      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return tb - ta;
-    });
+  async function fetchItems() {
+    setLoading(true);
+    try {
+      const q: string[] = [];
+      if (search) q.push(`search=${encodeURIComponent(search)}`);
+      if (cat) q.push(`category=${encodeURIComponent(cat)}`);
+      q.push("status=approved"); // only approved items
 
-    return out;
-  }, [employees, query, tab, sortBy]);
+      const qs = q.length ? `?${q.join("&")}` : "";
+      const res = await api(`/items${qs}`);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  useEffect(() => { if (page > totalPages) setPage(1); }, [totalPages]);
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+      let arr: any[] = [];
+      if (!res) arr = [];
+      else if (Array.isArray(res)) arr = res;
+      else if (res.content && Array.isArray(res.content)) arr = res.content;
+      else if (res.data && Array.isArray(res.data)) arr = res.data;
+      else arr = [];
+
+      setItems(arr);
+    } catch (err: any) {
+      console.error("fetchItems error:", err);
+      setError(err?.message || "Failed loading items");
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Use createOrder helper
+  async function bookItem(id: number) {
+    try {
+      await createOrder({ itemId: id });
+      setSuccess("Item booked successfully");
+      // refresh bookings
+      await loadBookings();
+      // remove item locally (so it disappears)
+      setItems(prev => prev.filter(i => i.id !== id));
+    } catch (err: any) {
+      console.error("bookItem error:", err);
+      setError(err?.data?.message || err?.message || "Booking failed");
+    }
+  }
+
+  async function loadBookings() {
+    try {
+      const res = await fetchMyOrders();
+      // normalize
+      let arr: any[] = [];
+      if (Array.isArray(res)) arr = res;
+      else if (res?.content && Array.isArray(res.content)) arr = res.content;
+      else if (res?.data && Array.isArray(res.data)) arr = res.data;
+      else arr = [];
+
+      setBookings(arr);
+      setOpenBookings(true);
+    } catch (err) {
+      console.error("loadBookings error:", err);
+      setError("Failed to load bookings");
+    }
+  }
+
+  async function deleteItem(id: number) {
+    if (!confirm("Delete this item?")) return;
+    try {
+      await api(`/items/${id}`, { method: "DELETE" });
+      setItems(prev => prev.filter(i => i.id !== id));
+      setSuccess("Item deleted");
+    } catch (err: any) {
+      setError(err?.message || "Delete failed");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    window.location.href = "/login";
+  }
+
+  if (!token) {
+    window.location.href = "/login";
+    return null;
+  }
+
+  // client-side filter: remove items with availability 0
+  const visibleItems = (items ?? []).filter(i => {
+    const available = i?.availableQuantity ?? i?.quantity ?? 0;
+    return Number(available) > 0;
+  });
+
+  // client-side sort
+  const sortedItems = [...visibleItems].sort((a: any, b: any) => {
+    if (sortBy === "price-asc") {
+      return Number(a.price ?? 0) - Number(b.price ?? 0);
+    }
+    if (sortBy === "price-desc") {
+      return Number(b.price ?? 0) - Number(a.price ?? 0);
+    }
+    // recent by createdAt or id fallback
+    const atA = a?.createdAt ? new Date(a.createdAt).getTime() : (a.id ?? 0);
+    const atB = b?.createdAt ? new Date(b.createdAt).getTime() : (b.id ?? 0);
+    return atB - atA;
+  });
+
+  // when clicking category chip
+  function onSelectCategoryChip(c: any) {
+    const idOrName = c?.id ?? (c?.name ?? String(c));
+    setCat(String(idOrName));
+    // reload
+    fetchItems();
+  }
+
+  // skeleton cards while loading
+  function SkeletonGrid() {
+    const placeholders = new Array(6).fill(0);
+    return (
+      <div className="employee-grid">
+        {placeholders.map((_, idx) => (
+          <div key={idx} className="employee-item">
+            <div className="skeleton-card">
+              <div className="skeleton-header" />
+              <div className="skeleton-text" />
+              <div className="skeleton-meta" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-6 gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">Employee Dashboard</h1>
-            <p className="text-sm text-slate-500 mt-1">Manage employees, roles and status.</p>
-          </div>
+    <div className="employee-page">
+      {/* Floating toasts */}
+      <div style={{ position: "fixed", right: 18, top: 18, zIndex: 1200 }}>
+        {error && <div className="toast toast-error">{error}</div>}
+        {success && <div className="toast toast-success">{success}</div>}
+      </div>
 
-          <div className="flex items-center gap-3">
-            <input
-              aria-label="Search employees"
-              placeholder="Search by name, email or department..."
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-              className="px-3 py-2 rounded-md border bg-white shadow-sm text-sm w-80"
-            />
+      <header className="employee-header">
+        <div className="employee-title-wrap">
+          <h1 className="employee-title">Employee Dashboard</h1>
+          <p className="employee-sub">Welcome, {me?.name || "Employee"}</p>
+        </div>
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 rounded-md border bg-white text-sm"
-            >
-              <option value="newest">Newest</option>
-              <option value="name-asc">Name: A → Z</option>
-              <option value="name-desc">Name: Z → A</option>
+        <div className="employee-actions">
+          {/* Replaced "My Bookings" with Add New Category button */}
+          <button
+            className="employee-btn employee-btn-outline"
+            onClick={() => setShowAddCategory(true)}
+            title="Add new category"
+          >
+            + Add Category
+          </button>
+
+          <button className="employee-btn employee-btn-outline" onClick={logout}>
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <main className="employee-main">
+        <section className="employee-left">
+          <div className="employee-searchbar" style={{ alignItems: "center" }}>
+            <input className="employee-input" placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <select className="employee-select" value={cat} onChange={(e) => { setCat(e.target.value); }}>
+              <option value="">All Categories</option>
+              {(Array.isArray(categories) ? categories : []).map((c: any) => (
+                <option key={c.id ?? c.name} value={c.id ?? c.name}>{c.name ?? String(c)}</option>
+              ))}
             </select>
 
-            <Link to="/employees/new" className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm text-sm">
-              + Add Employee
-            </Link>
-          </div>
-        </div>
+            <select className="employee-select" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+              <option value="recent">Sort: Recent</option>
+              <option value="price-asc">Sort: Price (low → high)</option>
+              <option value="price-desc">Sort: Price (high → low)</option>
+            </select>
 
-        {/* stats + tabs */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-slate-500">Total Employees</div>
-            <div className="text-2xl font-semibold">{employees.length}</div>
+            <button onClick={fetchItems} className="employee-btn employee-btn-primary">Search</button>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-slate-500">Active</div>
-            <div className="text-2xl font-semibold">{employees.filter(e => String(e.status || '').toLowerCase() === 'active').length}</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-slate-500">Inactive</div>
-            <div className="text-2xl font-semibold">{employees.filter(e => String(e.status || '').toLowerCase() !== 'active').length}</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-slate-500">Departments</div>
-            <div className="text-2xl font-semibold">{Array.from(new Set(employees.map(e => e.department || 'Unassigned'))).length}</div>
-          </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            {(['all','active','inactive'] as const).map(t => (
+          {/* Category chips quick-filter */}
+          <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button className={`chip ${cat === "" ? "chip-active" : ""}`} onClick={() => { setCat(""); fetchItems(); }}>All</button>
+            {(Array.isArray(categories) ? categories : []).slice(0, 10).map((c: any) => (
               <button
-                key={t}
-                onClick={() => { setTab(t); setPage(1); }}
-                className={`px-3 py-2 rounded-full text-sm ${tab === t ? 'bg-indigo-600 text-white' : 'bg-white shadow-sm text-slate-700'}`}
+                key={c.id ?? c.name}
+                className={`chip ${String(c.id ?? c.name) === String(cat) ? "chip-active" : ""}`}
+                onClick={() => onSelectCategoryChip(c)}
               >
-                {t[0].toUpperCase() + t.slice(1)}
+                {c.name ?? String(c)}
               </button>
             ))}
           </div>
 
-          <div className="text-sm text-slate-500">Showing {(page-1)*PAGE_SIZE + 1} - {Math.min(page*PAGE_SIZE, filtered.length)} of {filtered.length}</div>
-        </div>
-
-        {/* Content */}
-        <section>
-          {loading && (
-            <div className="grid grid-cols-3 gap-6">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-lg p-4 animate-pulse">
-                  <div className="h-6 bg-slate-200 rounded w-3/4 mb-4" />
-                  <div className="h-4 bg-slate-200 rounded w-1/2 mb-2" />
-                  <div className="h-4 bg-slate-200 rounded w-2/3" />
+          {loading ? (
+            <div style={{ marginTop: 18 }}>
+              <SkeletonGrid />
+            </div>
+          ) : (
+            <div style={{ marginTop: 18 }}>
+              {sortedItems.length === 0 ? (
+                <div className="employee-empty">No items found.</div>
+              ) : (
+                <div className="employee-grid">
+                  {sortedItems.map((i: any) => (
+                    <div key={i.id} className="employee-item">
+                      <ItemCard
+                        item={i}
+                        onBook={bookItem}
+                        showView={false}
+                        showDelete={false}
+                        onDelete={deleteItem}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
-
-          {error && <div className="p-4 bg-red-50 text-red-700 rounded mb-4">{error}</div>}
-
-          {!loading && filtered.length === 0 && (
-            <div className="p-8 bg-white rounded shadow text-center">No employees found — try clearing filters or add a new employee.</div>
-          )}
-
-          {!loading && filtered.length > 0 && (
-            <>
-              <div className="grid grid-cols-3 gap-6">
-                {pageItems.map(emp => (
-                  <div key={String(emp.id)} className="bg-white rounded-lg shadow p-4 flex flex-col">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="text-lg font-semibold">{emp.name || `#${emp.id}`}</div>
-                        <div className="text-sm text-slate-500">{emp.email}</div>
-                        <div className="text-sm text-slate-500 mt-2">{emp.department || 'Unassigned'}</div>
-                      </div>
-
-                      <div className="text-right">
-                        <div className={`px-2 py-1 rounded-full text-xs ${String(emp.status || '').toLowerCase() === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                          {emp.status || 'Inactive'}
-                        </div>
-                        <div className="text-sm text-slate-400 mt-2">{emp.createdAt ? new Date(emp.createdAt).toLocaleDateString() : '—'}</div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex gap-2">
-                      <Link to={`/employees/${emp.id}`} className="px-3 py-2 border rounded text-sm">View</Link>
-                      <Link to={`/employees/${emp.id}/edit`} className="px-3 py-2 border rounded text-sm">Edit</Link>
-                      <button className="ml-auto px-3 py-2 bg-indigo-600 text-white rounded text-sm">Message</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* pagination */}
-              <div className="mt-6 flex items-center justify-between">
-                <div className="text-sm text-slate-500">Page {page} of {totalPages}</div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page <= 1} className="px-3 py-1 border rounded disabled:opacity-50">Prev</button>
-                  <div className="px-3">{page} / {totalPages}</div>
-                  <button onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page >= totalPages} className="px-3 py-1 border rounded disabled:opacity-50">Next</button>
-                </div>
-              </div>
-            </>
-          )}
         </section>
-      </div>
+
+        <aside className="employee-aside">
+          <div className="employee-upload-card">
+            <h3 className="employee-upload-title">Upload New Item</h3>
+            <UploadForm
+              categories={Array.isArray(categories) ? categories : []}
+              onCreated={(newItem) => {
+                // add to top only if it has availability > 0 and approved (or whatever your logic)
+                setItems(prev => [newItem, ...prev]);
+                setSuccess("Item uploaded");
+              }}
+            />
+          </div>
+        </aside>
+      </main>
+
+      {/* Add Category modal - reuses your NewCategory component */}
+      {showAddCategory && (
+        <div className="categories-modal-overlay" role="dialog" aria-modal="true" style={{
+          position: "fixed", inset: 0, background: "rgba(8,6,12,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+        }}>
+          <div className="categories-modal" style={{ width: 640, maxWidth: "94%", padding: 20, borderRadius: 12 }}>
+            <NewCategory
+              onClose={() => setShowAddCategory(false)}
+              onSuccess={(created) => {
+                // refresh categories and items so the new category shows in selects and listing
+                setShowAddCategory(false);
+                fetchCategories();
+                // optionally refetch items if you want newly-added category to be considered
+                fetchItems();
+                // small success toast
+                setSuccess(created?.name ? `Category "${created.name}" created` : "Category created");
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <BookingsDrawer open={openBookings} bookings={bookings} onClose={() => setOpenBookings(false)} />
     </div>
   );
 }
